@@ -1605,18 +1605,32 @@ async function syncToGcal(){
 
 function saveSheetsUrl(){
   const v=(document.getElementById('sheets-url-input')||{}).value||'';
-  if(v&&!v.includes('docs.google.com/spreadsheets')){showToast('URL Sheets invalide',true);return;}
+  if(v&&!v.includes('docs.google.com/spreadsheets')&&!v.includes('script.google.com')){
+    showToast('URL invalide — collez l\'URL du script Apps Script',true);return;
+  }
   gcal_sheets_url=v.trim();
   localStorage.setItem('mom_sheets_url',gcal_sheets_url);
-  showToast(v?'Google Sheets configuré ✓':'Configuration Sheets effacée');
+  showToast(v?'Script configuré ✓':'Configuration effacée');
   goPage('parametres');
 }
 
-function exportToSheets(){
-  if(!gcal_sheets_url){showToast('Configurez d\'abord l\'URL du Sheets',true);return;}
-  // Ouvre le Sheets dans un nouvel onglet — l'écriture réelle nécessite l'API Sheets (scope supplémentaire)
-  showToast('Ouverture de votre Sheets…');
-  setTimeout(()=>window.open(gcal_sheets_url,'_blank'),500);
+async function exportToSheets(){
+  if(!gcal_sheets_url){showToast('Configurez d\'abord l\'URL du script Apps Script',true);return;}
+  const approved=requests.filter(r=>r.status==='approved');
+  if(!approved.length){showToast('Aucune réservation validée à exporter');return;}
+  showToast('Export en cours…');
+  let ok=0;
+  for(const r of approved){
+    try{
+      await fetch(gcal_sheets_url,{
+        method:'POST',mode:'no-cors',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({...r,recurring:false})
+      });
+      ok++;
+    }catch(e){}
+  }
+  showToast(ok+' réservation(s) exportée(s) vers Sheets ✓');
 }
 
 function addContact(){
