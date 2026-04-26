@@ -1622,15 +1622,18 @@ async function exportToSheets(){
   let ok=0;
   for(const r of approved){
     try{
-      await fetch(gcal_sheets_url,{
-        method:'POST',mode:'no-cors',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({...r,recurring:false})
+      const params=new URLSearchParams({
+        id:r.id||'',resource:r.resource||'',cat:r.cat||'',
+        resp:r.resp||'',date:r.date||'',start:r.start||'',
+        end:r.end||'',motif:r.motif||'',status:r.status||'',
+        recurring:'false'
       });
+      const url=gcal_sheets_url+'?'+params.toString();
+      await fetch(url,{method:'GET',mode:'no-cors'});
       ok++;
     }catch(e){}
   }
-  showToast(ok+' réservation(s) exportée(s) vers Sheets ✓');
+  showToast(ok+' réservation(s) envoyée(s) — vérifiez votre Sheets ✓');
 }
 
 function addContact(){
